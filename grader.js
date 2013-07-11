@@ -30,11 +30,9 @@ var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 var URL_DEFAULT ="http://sleepy-spire-6380.herokuapp.com";
 
-var tmp_html = "tmp.html";
-
-var readURL = function(url) {
+var htmlFromURL = function(url) {
     rest.get(url).on('complete', function(data) {
-      fs.writeFileSync(tmp_html, data);
+	return cheerio.load(data);
     });
 };
 
@@ -55,8 +53,8 @@ var loadChecks = function(checksfile) {
     return JSON.parse(fs.readFileSync(checksfile));
 };
 
-var checkHtmlFile = function(htmlfile, checksfile) {
-    $ = cheerioHtmlFile(htmlfile);
+var checkHtmlFile = function($, checksfile) {
+    //$ = cheerioHtmlFile(htmlfile);
     var checks = loadChecks(checksfile).sort();
     var out = {};
     for(var ii in checks) {
@@ -76,13 +74,13 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <url>', 'URL to index.html', clone(readURL), URL_DEFAULT) 
+        .option('-u, --url <url>', 'URL to index.html', clone(htmlFromURL), URL_DEFAULT) 
         .parse(process.argv);
     var param ; 
     if(program.url) {
-	 param = tmp_html;
+	param = htmlFromURL(program.url);
     } else {
-	 param = program.file;
+	param = cheerioHtmlFile(program.file);
      } 	 
 //    var checkJson = checkHtmlFile(program.file, program.checks);
     var checkJson = checkHtmlFile(param, program.checks);
